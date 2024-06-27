@@ -305,7 +305,8 @@ endif()
 
 if(ENABLE_COVERAGE)
     ov_add_compiler_flags(--coverage)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+    # set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+    set(LINK_OPTIONS "${LINK_OPTIONS} --coverage")
 endif()
 
 # Honor visibility properties for all target types
