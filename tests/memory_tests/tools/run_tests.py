@@ -262,7 +262,11 @@ class TestCase:
 
     @property
     def precision(self) -> str | None:
-        return self.description.get("weight_precision")
+        w_precision = self.description.get("weight_precision")
+        i_precision = self.description.get("inference_precision")
+        if i_precision:
+            return f"{w_precision}-{i_precision}"
+        return w_precision
 
     @staticmethod
     def _read_description(model_path: Path) -> dict[str, str] | None:
@@ -308,7 +312,7 @@ class TestCase:
 
 
 class TestSession:
-    def __init__(self, executable: Path, ir_cache_dirs: list[Path], devices: list[str], api=None, report_reference=False, log_dir=None):
+    def __init__(self, executable: Path, ir_cache_dirs: list[Path], devices: list[str], api=None, report_reference=False, log_dir=None, prefix=""):
         self.executable = executable
         self.test_name = executable.stem.removeprefix("test_")
         self.ir_cache_dirs = ir_cache_dirs
@@ -316,6 +320,7 @@ class TestSession:
         self.report_api = api
         self.report_reference = report_reference
         self.test_info = self.get_test_info()
+        self.prefix = prefix
 
         self.report_metadata = None
         if self.report_api:
@@ -391,7 +396,7 @@ class TestSession:
                 "branch": os.environ.get("sourceBranch", "unknown"),
                 "target_branch": os.environ.get("targetBranch", "unknown"),
                 "log_path": os.environ.get("SHARED_LOG_PATH", ""),
-                "version": build_number,
+                "version": f"{self.prefix}{build_number}",
                 "ext": {}
             }
         except KeyError as err:
@@ -511,6 +516,7 @@ if __name__ == "__main__":
     parser.add_argument("--devices", default="CPU")
 
     parser.add_argument("--api", help="API endpoint for results to upload")
+    parser.add_argument("--prefix", help="Prefix to append to report version name")
     parser.add_argument("--upload-reference", "--reference", action="store_true",
                         help="This run will make new reference values")
     parser.add_argument("--log-dir", type=Path, default=None,
@@ -524,5 +530,6 @@ if __name__ == "__main__":
         [device.upper() for device in args.devices.split(",")],
         args.api,
         args.upload_reference,
-        args.log_dir
+        args.log_dir,
+        prefix=args.prefix
     ).run()
